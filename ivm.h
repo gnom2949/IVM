@@ -1,13 +1,21 @@
 #ifndef IVM_H
 #define IVM_H
 #define IVM_MNUM 0x49564D58
-#define PUSH(val_type, field, value) \
+#define IVM_VERSION "0.2"
+#define IVM_STACK_SIZE 256
+#define IVM_BYTE_SIZE 1024
+#define WIDTH 50
+#define PUSH(ctx, val_type, field, value) \
         do { \
-            if (sp >= 255) { printf ("\033[31m[ERROR]\033[0m Stack Overflow!"); running = false; } \
+            if ((ctx)->sp >= IVM_STACK_SIZE - 1) \
+            { \
+                fprintf (stderr, "\033[31m[ERROR]\033[0m Stack Overflow!"); \
+                (ctx)->running = false; \
+            } \
             else { \
-                sp++; \
-                stack[sp].type = val_type; \
-                stack[sp].data.field = value; \
+                (ctx)->sp++; \
+                (ctx)->stack[(ctx)->sp].type = val_type; \
+                (ctx)->stack[(ctx)->sp].data.field = value; \
             } \
         } while (0)
 
@@ -75,11 +83,6 @@ typedef enum {
         G_OP_LESS,              // less than (<): G_OP_LESS: a/b/result/
         G_OP_HIGHER,            // greater than (>): G_OP_HIGHER: a/b/result/
 
-        /*------------------ Loop Constructs ------------------*/
-        G_LOOP_FOR,             // for loop: G_LOOP_FOR: init/cond/inc/body/
-        G_LOOP_WHILE,           // while loop: G_LOOP_WHILE: cond/body/
-        G_LOOP_DO_WHILE,        // do-while loop: G_LOOP_DO_WHILE: body/cond/
-
         /*------------------ Debug Operations ------------------*/
         CHECK_DEF,              // check define: CHECK_DEF: macro/
         CHECK_VAR,              // check variable: CHECK_VAR: var/
@@ -99,12 +102,9 @@ typedef enum {
         G_SYS_PROC_CLOSE,       // close process: G_SYS_PROC_CLOSE: pid/
         
         /*------------------ Standard I/O ------------------*/
-        G_SYS_STDOUT_READ,      // read from stdout: G_SYS_STDOUT_READ: buf/
-        G_SYS_STDOUT_CLOSE,     // close stdout: G_SYS_STDOUT_CLOSE/
-        G_SYS_STDOUT_OPEN,      // open stdout: G_SYS_STDOUT_OPEN/
-        G_SYS_STDIN_OPEN,       // open stdin: G_SYS_STDIN_OPEN/
-        G_SYS_STDIN_READ,       // read from stdin: G_SYS_STDIN_READ: buf/
-        G_SYS_STDIN_CLOSE,      // close stdin: G_SYS_STDIN_CLOSE/
+        G_SYS_STDIN_READ,       // read from stdin(0): G_SYS_STDIN_READ: buf/
+        G_SYS_STDOUT_WRITE,     // write to stdout(1): G_SYS_STDOUT_WRITE: value/buf/
+        G_SYS_STDERR_WRITE,     // write to stderr(2): G_SYS_STDOUT_WRITE: value/buf/
         
         /*------------------ Network Operations ------------------*/
         G_SYS_NETSOCK_OPEN,     // open socket: G_SYS_NETSOCK_OPEN: host/port/sock/
@@ -125,11 +125,11 @@ typedef enum {
         G_ENDIF,                // endif: G_ENDIF/
 
         /*------------------ End of Instructions ------------------*/
-        G_INSTRUCTION_COUNT,     // total number of instructions
-		G_HALT = 47,
+		G_HALT,
 		G_SHOW,
 		G_JUMP,
-		G_JUMP_IF_FALSE
+		G_JUMP_IF_FALSE,
+        G_INSTRUCTION_COUNT     // total number of instructions
 } gOpCode;
 
 typedef struct {
@@ -154,19 +154,53 @@ typedef struct {
 	uint32_t code_size;
 } G_Header_t;
 
-extern int ip; // Instruction pointer.
-extern int sp; // Stack pointer.
-extern bool running = true; 
-extern int pc; // Program counter.
+typedef struct {
+    int ip; // Instruction pointer.
+    int sp; // Stack pointer. 
+    int pc; // Program counter.
+    G_Value_t stack[IVM_STACK_SIZE];
+    uint8_t bytecode[IVM_BYTE_SIZE];
+    bool running;
+} Intcon_t; 
 
+//extern int ip; // Instruction pointer.
+//extern int sp; // Stack pointer. 
+//extern int pc; // Program counter.
+//extern uint8_t bytecode[1024];
 
-void emitByte (uint8_t byte);
-int verifyHeader (FILE *fd);
-int openfiled (const char *filename);
-void save_to_file (const char *filename);
-void emitFloat (float f);
-void emitInteger (int i);
-void emitString (const char* str);
-void eval();
+void emit_byte (Intcon_t *ctx, uint8_t byte);
+int obj_verifyHeader (FILE *fd);
+int obj_loadfile (Intcon_t *ctx, const char *filename);
+void emit_float (Intcon_t *ctx, float f);
+void obj_savefile (Intcon_t *ctx, const char *filename);
+void emit_integer (Intcon_t *ctx, int i);
+void emit_string (Intcon_t *ctx, const char *str);
+void emit_double (Intcon_t *ctx, double d);
+/* ================================= API ============================================= */
+// Manage the runtime //
+void obj_execute_runtime (Intcon_t *ctx);
+Intcon_t *g_api_init();
+void g_api_save (Intcon_t *ctx, const char *filename);
+void g_api_corrupt (Intcon_t *ctx);
+Intcon_t *obj_create (void);
+void obj_corrupt (Intcon_t *cxt);
+void obj_kick (Intcon_t *ctx);
+
+// Stack commands //
+void g_push_int (Intcon_t *ctx, int value);
+void g_push_float (Intcon_t *ctx, float value);
+void g_push_double (Intcon_t *ctx, double value);
+void g_push_string (Intcon_t *ctx, const char *string);
+void g_api_add();
+void g_api_show();
+
+// Memory management
+void g_malloc (Intcon_t *ctx, size_t size);
+void g_free (Intcon_t *ctx);
+
+// Debug functions
+void g_mem_get_stats (Intcon_t *ctx);
+void g_mem_map(Intcon_t *ctx);
+void g_halt(Intcon_t *ctx);
 
 #endif /* IVM_H */
