@@ -252,7 +252,7 @@ void obj_execute_runtime (Intcon_t *ctx)
 				break;
 			}
 
-            case G_MEMORY_ALLOCATE: 
+            case G_MEMORY_ALLOCATE:
 			{
 				G_Value_t val_size = STACK[SP--];
 				size_t size = (size_t) val_size.data.i_val;
@@ -361,7 +361,7 @@ void obj_execute_runtime (Intcon_t *ctx)
 						MemoryPullStats (&stats);
 						printf ("\n===== [ IVM MEMORY STATISTICS ] =====\n");
 						printf ("	Mapped:		%zu KB\n", stats.total_mapped / 1024);
-						printf ("	Used:		%zu KB (%.2f%%)\n", stats.currently_used, (float)stats.currently_used / stats.total_mapped * 100);
+						printf ("	Used:		%zu KB (%.2f%%)\n", stats.currently_used / 1024, (float)stats.currently_used / stats.total_mapped * 100);
 						printf ("	Blocks: 	%d active\n", stats.active_blocks);
 						printf ("\n======================================\n\n");
 					break;
@@ -531,7 +531,7 @@ void obj_execute_runtime (Intcon_t *ctx)
 	}
 }
 
-
+#ifndef NOMAIN
 int main (int argc, char **argv) 
 {
 	Intcon_t *ctx = obj_create ();
@@ -550,3 +550,4 @@ int main (int argc, char **argv)
 	obj_corrupt (ctx);
 	return 0;
 }
+#endif /* NOMAIN */
