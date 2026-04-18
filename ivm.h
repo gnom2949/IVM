@@ -1,5 +1,8 @@
 #ifndef IVM_H
 #define IVM_H
+#if defined(__cplusplus)
+    extern "C" {
+#endif /* __cplusplus */
 #define IVM_MNUM 0x49564D58
 #define IVM_VERSION "0.2"
 #define IVM_STACK_SIZE 256
@@ -25,6 +28,13 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <string.h>
+#define true 1
+#define false 0
+
+typedef struct {
+    int startAddr;
+    int endAddr;
+}LoopWhile;
 
 typedef enum {
         /*------------------ Variables Declaration ------------------*/
@@ -181,6 +191,7 @@ void emit_double (Intcon_t *ctx, double d);
 void obj_execute_runtime (Intcon_t *ctx);
 Intcon_t *g_api_init();
 void g_api_save (Intcon_t *ctx, const char *filename);
+void g_api_load (Intcon_t *ctx, const char *filename);
 void g_api_corrupt (Intcon_t *ctx);
 Intcon_t *obj_create (void);
 void obj_corrupt (Intcon_t *cxt);
@@ -191,6 +202,11 @@ void g_push_int (Intcon_t *ctx, int value);
 void g_push_float (Intcon_t *ctx, float value);
 void g_push_double (Intcon_t *ctx, double value);
 void g_push_string (Intcon_t *ctx, const char *string);
+int g_get_label (Intcon_t *ctx);
+void g_halt(Intcon_t *ctx);
+void g_push_boolean (Intcon_t *ctx, bool value);
+void g_push_uint8 (Intcon_t *ctx, uint8_t value);
+void g_push_char (Intcon_t *ctx, char character);
 void g_api_add();
 void g_api_show();
 
@@ -199,8 +215,17 @@ void g_malloc (Intcon_t *ctx, size_t size);
 void g_free (Intcon_t *ctx);
 
 // Debug functions
+void g_debug_patch_addr (Intcon_t *ctx, int addresToPatch, int targetValue);
 void g_mem_get_stats (Intcon_t *ctx);
 void g_mem_map(Intcon_t *ctx);
-void g_halt(Intcon_t *ctx);
+
+// loop's
+LoopWhile g_while_start (Intcon_t *ctx);
+LoopWhile g_while_end (Intcon_t *ctx);
+void g_while_cond_check (Intcon_t *ctx, LoopWhile *w);
 
 #endif /* IVM_H */
+
+#if defined(__cplusplus)
+    }
+#endif /* __cplusplus */
