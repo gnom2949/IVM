@@ -4,7 +4,7 @@
     extern "C" {
 #endif /* __cplusplus */
 #define IVM_MNUM 0x49564D58
-#define IVM_VERSION "0.2"
+#define IVM_VERSION "0.2.1"
 #define IVM_STACK_SIZE 256
 #define IVM_BYTE_SIZE 1024
 #define WIDTH 50
