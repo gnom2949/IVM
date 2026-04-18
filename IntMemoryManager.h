@@ -10,6 +10,9 @@
 #ifndef INT_MEMORY_MANAGER_H
 #define INT_MEMORY_MANAGER_H
 
+#if defined (__cplusplus)
+extern "C" {
+#endif /* __cplusplus */
 #include <stddef.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -40,4 +43,8 @@ void *MemoryReAllocate (void *ptr, size_t size);
 void MemoryPullStats (IntMemoryStatistics *out_stats);
 void MemoryRenderMap ();
 
-#endif
+#endif /* INT_MEMORY_MANAGER_H*/
+
+#if defined (__cplusplus)
+}
+#endif /* __cplusplus */
