@@ -6,12 +6,18 @@ Intcon_t *g_api_init()
     Intcon_t *ctx = obj_create ();
     ctx->pc = 0;
     memset (ctx->bytecode, 0, sizeof (ctx->bytecode));
+    obj_kick (ctx);
     return ctx;
 }
 
 void g_api_save (Intcon_t *ctx, const char *filename)
 {
     obj_savefile (ctx, filename);
+}
+
+void g_api_load (Intcon_t *ctx, const char *filename)
+{
+    obj_loadfile (ctx, filename);
 }
 
 void g_push_int (Intcon_t *ctx, int value)
@@ -36,6 +42,34 @@ void g_push_string (Intcon_t *ctx, const char *string)
 {
     emit_byte (ctx, G_PUSH_STRING);
     emit_string (ctx, string);
+}
+
+void g_push_boolean (Intcon_t *ctx, bool value)
+{
+    emit_byte (ctx, G_PUSH_BOOLEAN);
+    emit_integer (ctx, value);
+}
+
+int g_get_label (Intcon_t *ctx)
+{
+    return ctx->ip;
+}
+
+void g_push_uint8 (Intcon_t *ctx, uint8_t value)
+{
+    emit_byte (ctx, G_PUSH_UINT);
+    emit_byte (ctx, value);
+}
+
+void g_push_char (Intcon_t *ctx, char character)
+{
+    emit_byte (ctx, G_PUSH_CHAR);
+    emit_byte (ctx, (uint8_t)character);
+}
+
+void g_debug_patch_addr (Intcon_t *ctx, int addresToPatch, int targetValue)
+{
+    memcpy (&ctx->bytecode[addresToPatch], &targetValue, sizeof (int));
 }
 
 void g_malloc (Intcon_t *ctx, size_t size)
