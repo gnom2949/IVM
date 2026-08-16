@@ -9,11 +9,11 @@ TEST_CFLAGS = $(CFLAGS) -DNOMAIN
 LIB_NAME = libivm.so 
 TEST_TARGET = run_tests
 
-LIB_SRCS = IntMemoryManager.c ivm-api.c
-MAIN_SRC = main.c
+LIB_SRCS = src/ivm-api.c
+MAIN_SRC = src/main.c
 TEST_SRCS = tests/testmem.cpp tests/testapi.cpp tests/test1.cpp
 
-LIB_OBJS = $(LIB_SRCS:.c=.o)
+LIB_OBJS = $(LIB_SRCS:.c=.o) external/obj/IntMemoryManager.o
 MAIN_OBJ = $(MAIN_SRC:.c=.o)
 TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 
@@ -30,8 +30,12 @@ $(LIB_NAME): $(LIB_OBJS)
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-main_test.o: main.c
+main_test.o: src/main.c
 	$(CC) $(TEST_CFLAGS) -c $< -o $@
+
+dependency:
+	git clone https://codeberg.org/imm-org/imm.git external
+	$(MAKE) -C external
 
 test: $(TEST_OBJS) $(LIB_OBJS) main_test.o
 	$(CXX) $(CXXFLAGS) -o $(TEST_TARGET) $(TEST_OBJS) $(LIB_OBJS) main_test.o $(LDFLAGS) $(TEST_LDFLAGS)
@@ -40,14 +44,15 @@ test: $(TEST_OBJS) $(LIB_OBJS) main_test.o
 install: $(LIB_NAME)
 	install -d $(DESTDIR)$(PREFIX)/lib
 	install -d $(DESTDIR)$(PREFIX)/include/ivm
-	install -d $(DESTDIR)$(PREFIX)/include/imm
 	install -m 755 $(LIB_NAME) $(DESTDIR)$(PREFIX)/lib/
 	install -m 644 ivm.h $(DESTDIR)$(PREFIX)/include/ivm/
-	install -m 644 IntMemoryManager.h $(DESTDIR)$(PREFIX)/include/imm/
+	install -m 644 arena.h $(DESTDIR)$(PREFIX)/include/ivm/
 	sudo ldconfig
+	sudo $(MAKE) -C external install
 	@echo "Successfully installed IVM."
 
 clean:
 	rm -f *.o tests/*.o $(LIB_NAME) $(TEST_TARGET)
+	rm -rf external
 
-.PHONY: all clean install test
+.PHONY: all clean install test dependency
