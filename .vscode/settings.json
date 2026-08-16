@@ -1,0 +1,4 @@
+{
+    "clangd.fallbackFlags": ["-I${workspaceFolder}/include"],
+    "C_Cpp.default.includePath": ["${workspaceFolder}/include"],
+}
